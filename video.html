@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Player</title>
+  <style>
+    body {
+      background-color: #000000;
+    }
+    video {
+      margin: 0 auto;
+      display: block;
+      width: auto;
+    }
+    button {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      border: none;
+      cursor: pointer;
+      background-color: transparent;
+      padding: 0;
+      display: flex;
+      align-items: center;
+    }
+    button img {
+      filter: invert(47%) sepia(34%) saturate(1004%) hue-rotate(176deg) brightness(92%) contrast(96%);
+      /* 通过滤镜将图标颜色调整为蓝色，可根据实际效果微调参数 */
+    }
+    button span {
+      margin-left: 5px;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <video id="myVideo" controls autoplay width="640" height="360">
+    <source src="./videos.php" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+  <button id="loopButton">
+    <img id="loopIcon" src="./pause_icon.svg" alt="连播关闭图标">
+    <span id="loopText">连播关闭</span>
+  </button>
+
+  <script>
+    const video = document.getElementById('myVideo');
+    const loopButton = document.getElementById('loopButton');
+    const loopIcon = document.getElementById('loopIcon');
+    const loopText = document.getElementById('loopText');
+    let isLooping = false;
+
+    // 定义音量调节步长，可根据实际需求调整大小
+    const volumeStep = 0.1;
+
+    // 页面加载完成时获取页面可视高度并设置视频高度
+    window.onload = function () {
+      const pageHeight = window.innerHeight;
+      video.style.height = pageHeight + 'px';
+      video.style.width = 'auto';
+    };
+
+    // 监听按钮点击事件，切换连播功能状态及图标、文字说明
+    loopButton.addEventListener('click', function () {
+      isLooping =!isLooping;
+      if (isLooping) {
+        loopIcon.src = './play_icon.svg';
+        loopText.textContent = "连播开启";
+      } else {
+        loopIcon.src = './pause_icon.svg';
+        loopText.textContent = "连播关闭";
+      }
+    });
+
+    // 监听视频播放结束事件
+    video.addEventListener('ended', function () {
+      if (isLooping) {
+        // 如果开启连播功能，重新设置视频源，触发重新加载视频
+        video.src = './videos.php';
+        video.load();
+      }
+    });
+
+    // 监听键盘按下事件
+    document.addEventListener('keydown', function (event) {
+      if (event.key === " ") {
+        // 空格键控制播放暂停
+        if (video.paused) {
+          video.play();
+        } else {
+          video.pause();
+        }
+      } else if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+        // 左右方向键刷新视频，先隐藏视频，加载完成后再显示
+        video.style.display = 'none';
+        video.src = './videos.php';
+        video.addEventListener('loadedmetadata', function () {
+          video.style.display = 'block';
+        });
+        video.load();
+      } else if (event.key === "Enter") {
+        // 回车键控制全屏/返回
+        if (!document.fullscreenElement &&!document.mozFullScreenElement &&
+       !document.webkitFullscreenElement &&!document.msFullscreenElement) {
+          // 当前未处于全屏状态，进入全屏
+          if (video.requestFullscreen) {
+            video.requestFullscreen();
+          } else if (video.mozRequestFullScreen) {
+            video.mozRequestFullScreen();
+          } else if (video.webkitRequestFullscreen) {
+            video.webkitRequestFullscreen();
+          } else if (video.msRequestFullscreen) {
+            video.msRequestFullscreen();
+          } else {
+            console.log("当前浏览器不支持全屏功能");
+          }
+        } else {
+          // 当前处于全屏状态，退出全屏
+          if (document.exitFullscreen) {
+            document.exitFullscreen();
+          } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+          }
+        }
+      } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        // 上下方向键控制音量
+        handleVolumeChange(event.key);
+      }
+    });
+
+    // 封装一个函数用于处理音量调整逻辑
+    function handleVolumeChange(key) {
+      if (key === "ArrowUp") {
+        video.volume = Math.min(video.volume + volumeStep, 1);
+      } else {
+        video.volume = Math.max(video.volume - volumeStep, 0);
+      }
+    }
+
+    video.addEventListener('play', function () {
+      console.log('视频开始播放了');
+    });
+
+    video.addEventListener('pause', function () {
+      console.log('视频暂停了');
+    });
+  </script>
+</body>
+
+</html>
